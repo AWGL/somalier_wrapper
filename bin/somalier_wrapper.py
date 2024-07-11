@@ -4,7 +4,6 @@ import argparse
 import subprocess
 import os
 
-
 def parse_arguments():
 	argument_parser = argparse.ArgumentParser()
 	argument_parser.add_argument(
@@ -22,9 +21,14 @@ def parse_arguments():
 
 
 def somalier_extract(file, sites, ref, outdir):
-	# Make output directory if doesn't already exist
-	os.makedirs(outdir, exist_ok=True)
-
+	try:
+		# Make output directory if it doesn't already exist
+		os.makedirs(outdir, exist_ok=True)
+		print(f'Output directory ""{outdir}" sucessfully created')
+	except Exception as e:
+		print(f"Error creating output directory: {e}")
+		raise
+	
 	with open(file, "rt") as f:
 		for line in f:
 
@@ -36,13 +40,17 @@ def somalier_extract(file, sites, ref, outdir):
 			cmd = (
 				f"somalier extract "
 				f"--sites {sites} "
-				f"--fasta {ref} -"
-				f"-sample-prefix {outdir}/{sample_id} "
+				f"--fasta {ref} "
+				f"--sample-prefix {sample_id} "
+				f"--out-dir {outdir} "
 				f"{bam_path}"
 			)
 			subprocess.run(cmd, shell=True, check=True)
 
-
 def main():
 	args = parse_arguments()
 	somalier_extract(args.sample_info_tsv, args.sites, args.fasta, args.outdir)
+
+
+if __name__ == "__main__":
+	main()
