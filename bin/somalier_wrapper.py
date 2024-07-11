@@ -3,6 +3,7 @@
 import argparse
 import subprocess
 import os
+import glob
 
 def parse_arguments():
 	argument_parser = argparse.ArgumentParser()
@@ -15,16 +16,17 @@ def parse_arguments():
 		"--fasta", help="Path to reference genome", required=True
 	)
 	argument_parser.add_argument("--sites", help="Path to sites file", required=True)
-	argument_parser.add_argument("--outdir", help="Output directory", required=True)
+	argument_parser.add_argument("--prefix", help="Prefix for results", required=True)
+	argument_parser.add_argument("--keep", help="Keeps temp directory", required=False)
 	args = argument_parser.parse_args()
 	return args
 
 
-def somalier_extract(file, sites, ref, outdir):
+def somalier_extract(file, sites, ref):
 	try:
 		# Make output directory if it doesn't already exist
-		os.makedirs(outdir, exist_ok=True)
-		print(f'Output directory ""{outdir}" sucessfully created')
+		os.makedirs("somalier_output", exist_ok=True)
+		print(f"Output directory sucessfully created")
 	except Exception as e:
 		print(f"Error creating output directory: {e}")
 		raise
@@ -42,15 +44,32 @@ def somalier_extract(file, sites, ref, outdir):
 				f"--sites {sites} "
 				f"--fasta {ref} "
 				f"--sample-prefix {sample_id} "
-				f"--out-dir {outdir} "
+				f"--out-dir somalier_output/temp "
 				f"{bam_path}"
 			)
 			subprocess.run(cmd, shell=True, check=True)
 
+def somalier_relate(prefix):
+	# Get list of .somalier files in the specified directory
+	somalier_files = glob.glob("somalier_output/temp/*.somalier")
+	
+	# Join list into a single string
+	somalier_files = ' '.join(somalier_files)
+	
+	# Construct command
+	cmd = (
+		f"somalier relate "
+		f"{somalier_files} "
+		f"--output-prefix somalier_output/{prefix}"
+		)
+	
+	# Run command
+	subprocess.run(cmd, shell=True, check=True)
+
 def main():
 	args = parse_arguments()
-	somalier_extract(args.sample_info_tsv, args.sites, args.fasta, args.outdir)
-
+	somalier_extract(args.sample_info_tsv, args.sites, args.fasta)
+	somalier_relate(args.prefix)
 
 if __name__ == "__main__":
 	main()
