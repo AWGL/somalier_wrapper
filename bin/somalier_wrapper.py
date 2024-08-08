@@ -12,7 +12,6 @@ def parse_arguments():
 	argument_parser.add_argument("--fasta", help="Path to reference genome", required=True)
 	argument_parser.add_argument("--sites", help="Path to sites file", required=True)
 	argument_parser.add_argument("--prefix", help="Prefix for results", required=True)
-	argument_parser.add_argument("--keep", help="Keeps temp directory", required=False)
 	argument_parser.add_argument("--patient_identifier", help="column specifying unique patient identifier (optional)",required=False)
 	args = argument_parser.parse_args()
 	return args
@@ -23,12 +22,12 @@ def somalier_extract(file, sites, ref):
 	print(f"Output directory sucessfully created")
 	
 	# Load csv file
-	with open(csv_file, mode='r') as file:
-    	# Create a DictReader object
-		reader = csv.DictReader(file)
-    
-    	# Get sample IDs, run IDs, and CRAM paths
-    	for row in reader:
+	with open(file, mode='r') as csv_file:
+		# Create a DictReader object
+		reader = csv.DictReader(csv_file)
+
+		# Get sample IDs, run IDs, and CRAM paths
+		for row in reader:
 			sample_id = row['sample_id']
 			cram_path = row['cram_path']
 
@@ -62,7 +61,7 @@ def somalier_relate(prefix):
 
 def main():
 	args = parse_arguments()
-	somalier_extract(args.sample_info_tsv, args.sites, args.fasta)
+	somalier_extract(args.sample_info_csv, args.sites, args.fasta)
 	#somalier_relate(args.prefix)
 
 if __name__ == "__main__":
