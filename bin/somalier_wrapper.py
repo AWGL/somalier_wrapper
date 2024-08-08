@@ -25,11 +25,11 @@ def somalier_extract(file, sites, ref):
 	# Load csv file
 	with open(csv_file, mode='r') as file:
     	# Create a DictReader object
-    	reader = csv.DictReader(file)
+		reader = csv.DictReader(file)
     
     	# Get sample IDs, run IDs, and CRAM paths
     	for row in reader:
-        	sample_id = row['sample_id']
+			sample_id = row['sample_id']
 			cram_path = row['cram_path']
 
 			# Extract informative sites from cram
