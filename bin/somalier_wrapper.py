@@ -6,6 +6,7 @@ import os
 import glob
 import csv
 import logging
+import pandas as pd
 
 def parse_arguments():
 	argument_parser = argparse.ArgumentParser()
