@@ -45,8 +45,11 @@ def somalier_extract(file, sites, ref):
 				f"{cram_path}"
 			)
 			try:
-				subprocess.run(cmd, shell=True, check=True)
-				logging.info(f"Extraction successful for sample: {sample_id}")
+				if os.path.exists(f"{output_dir}/{sample_id}.somalier"):
+					logging.info(f"Extraction successful for sample: {sample_id} (using previous extraction)")
+				else:
+					subprocess.run(cmd, shell=True, check=True)
+					logging.info(f"Extraction successful for sample: {sample_id}")
 			except subprocess.CalledProcessError as e:
 				logging.error(f"Error occurred while extracting sample: {sample_id}")
 				logging.error(str(e))
