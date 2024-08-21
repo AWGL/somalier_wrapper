@@ -45,7 +45,6 @@ def somalier_extract(file, sites, ref):
 				f"somalier extract "
 				f"--sites {sites} "
 				f"--fasta {ref} "
-				f"--sample-prefix {sample_id} "
 				f"--out-dir {output_dir} "
 				f"{cram_path}"
 			)
@@ -82,11 +81,12 @@ def somalier_relatedness_expected(file, identifier, prefix):
 	output_file = 'somalier_output/expected_relationships.csv'
 	with open(output_file, 'w') as f:
 		for item in grouped['sample_id']:
+			print(item)
 			f.write(f"{item}\n")
 
 	# Get list of .somalier files in the specified directory
 	# If no files present return error
-	somalier_files = glob.glob("somalier_output/temp/*.somalier")
+	somalier_files = glob.glob("somalier_output/temp/*.somalier") ## <- update so that only looks at specified samples
 	if not somalier_files:
 		logging.warning("No .somalier files found in 'somalier_output/temp/' directory.")
 		return
