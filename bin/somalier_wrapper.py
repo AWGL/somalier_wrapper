@@ -111,11 +111,42 @@ def somalier_relatedness_expected(file, identifier, prefix):
 		logging.error(str(e))
 
 
+def somalier_relatedness(file, refix):
+	"""
+	Run somalier relate without groups file e.g. when sample pairs are not known
+	"""
+
+	# Get list of .somalier files in the specified directory
+	# If no files present return error
+	somalier_files = glob.glob("somalier_output/temp/*.somalier") ## <- update so that only looks at specified samples
+	if not somalier_files:
+		logging.warning("No .somalier files found in 'somalier_output/temp/' directory.")
+		return
+
+	# Join list into a single string
+	somalier_files_str = ' '.join(somalier_files)
+
+	# Construct command
+	cmd = (
+		f"somalier relate "
+		f"{somalier_files_str} "
+		f"--output-prefix somalier_output/{prefix}"
+	)
+
+	# Run command
+	try:
+		subprocess.run(cmd, shell=True, check=True)
+		logging.info(f"Relatedness analysis completed.")
+	except subprocess.CalledProcessError as e:
+		logging.error("Error occurred during somalier relate.")
+		logging.error(str(e))
+
+
 def main():
 	# Set log format
 	logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 	
-	# Gather command line arguments
+	# Gather command line argumentsCalledProcessError
 	args = parse_arguments()
 	
 	# Extract informative sites from CRAMs
@@ -123,6 +154,9 @@ def main():
 	
 	if args.patient_identifier:
 		somalier_relatedness_expected(args.sample_info_csv, args.patient_identifier, args.prefix)
+
+	else:
+		somalier_relatedness(args.sample_info_csv, args.prefix)
 
 
 if __name__ == "__main__":
