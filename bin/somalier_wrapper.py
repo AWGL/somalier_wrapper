@@ -8,6 +8,7 @@ import csv
 import logging
 import pandas as pd
 
+
 def parse_arguments():
 	argument_parser = argparse.ArgumentParser()
 	argument_parser.add_argument("--sample_info_csv", help="requires following columns: sample_id, cram_path and (optional) patient_identifier", required=True)
@@ -15,7 +16,8 @@ def parse_arguments():
 	argument_parser.add_argument("--sites", help="Path to sites file", required=True)
 	argument_parser.add_argument("--prefix", help="Prefix for results", required=True)
 	argument_parser.add_argument("--patient_identifier", help="Column specifying unique patient identifier (optional)", required=False)
-	args = argument_parser.parse_args()
+	argument_parser.add_argument("--somalier_1K_directory", help="Path to directory containing .somalier files for 1K genomes", required=False)
+	args = argument_parser.parse_args("--somalier_1K_labels", help="Path to labels file for 1K genomes samples", required=False)
 	return args
 
 
@@ -61,6 +63,37 @@ def somalier_extract(file, sites, ref):
 				logging.error(str(e))
 
 
+def somalier_relatedness(file, prefix):
+	"""
+	Run somalier relate without groups file e.g. when sample pairs are not known
+	"""
+
+	# Get list of .somalier files in the specified directory
+	# If no files present return error
+	somalier_files = glob.glob("somalier_output/temp/*.somalier") ## <- update so that only looks at specified samples
+	if not somalier_files:
+		logging.warning("No .somalier files found in 'somalier_output/temp/' directory.")
+		return
+
+	# Join list into a single string
+	somalier_files_str = ' '.join(somalier_files)
+
+	# Construct command
+	cmd = (
+		f"somalier relate "
+		f"{somalier_files_str} "
+		f"--output-prefix somalier_output/{prefix}"
+	)
+
+	# Run command
+	try:
+		subprocess.run(cmd, shell=True, check=True)
+		logging.info(f"Relatedness analysis completed.")
+	except subprocess.CalledProcessError as e:
+		logging.error("Error occurred during somalier relate.")
+		logging.error(str(e))
+
+		
 def somalier_relatedness_expected(file, identifier, prefix):
 	"""
 	Run somalier relate with groups file (use when sample relationships are known 
@@ -111,36 +144,24 @@ def somalier_relatedness_expected(file, identifier, prefix):
 		logging.error(str(e))
 
 
-def somalier_relatedness(file, refix):
-	"""
-	Run somalier relate without groups file e.g. when sample pairs are not known
-	"""
+def somalier_ancestry(path_1K, ancestry_labels, prefix):
 
-	# Get list of .somalier files in the specified directory
-	# If no files present return error
-	somalier_files = glob.glob("somalier_output/temp/*.somalier") ## <- update so that only looks at specified samples
-	if not somalier_files:
-		logging.warning("No .somalier files found in 'somalier_output/temp/' directory.")
-		return
+	# Get list of .somalier files for 1K genomes
+	somalier_1K_files = glob.glob(f"{path_1K}/*.somalier")
+	somalier_1K_files = ' '.join(somalier_1K_files)
 
-	# Join list into a single string
-	somalier_files_str = ' '.join(somalier_files)
+	# Get list of .somalier files for samples
+	somalier_files = glob.glob("somalier_output/temp/*.somalier")
+	somalier_files = ' '.join(somalier_files)
 
 	# Construct command
 	cmd = (
-		f"somalier relate "
-		f"{somalier_files_str} "
-		f"--output-prefix somalier_output/{prefix}"
+		f"somalier ancestry "
+		f"--labels {ancestry_labels}"
+		f"{somalier_1K_files}"
+		f"{somalier_files} "
+		f"--output-prefix {prefix}"
 	)
-
-	# Run command
-	try:
-		subprocess.run(cmd, shell=True, check=True)
-		logging.info(f"Relatedness analysis completed.")
-	except subprocess.CalledProcessError as e:
-		logging.error("Error occurred during somalier relate.")
-		logging.error(str(e))
-
 
 def main():
 	# Set log format
@@ -150,14 +171,18 @@ def main():
 	args = parse_arguments()
 	
 	# Extract informative sites from CRAMs
-	# somalier_extract(args.sample_info_csv, args.sites, args.fasta)
+	somalier_extract(args.sample_info_csv, args.sites, args.fasta)
 	
+	# Calculate pairwise relatedness between all samples
 	if args.patient_identifier:
 		somalier_relatedness_expected(args.sample_info_csv, args.patient_identifier, args.prefix)
-
 	else:
 		somalier_relatedness(args.sample_info_csv, args.prefix)
+	
+	# Estimate sample population ancestry
+	if args.somalier_1K_directory and args.somalier_1K_labels:
+		somalier_ancestry(args.somalier_1K_directory, args.somalier_1K_labels, args.prefix)
 
-
+	
 if __name__ == "__main__":
 	main()
