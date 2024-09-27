@@ -21,13 +21,11 @@ Ash Sendell-Price, Sept 2024
 Usage:
 python bin/somalier_wrapper.py --sample_info_csv tso_repeated_testing_anonymised.csv \
 	--fasta /data/resources/human/references/GRCh38_masked/GRCh38_full_analysis_set_plus_decoy_hla_masked.fa \
-	--sites ../resources/somalier/sites.hg38.vcf.gz --prefix tso_repeats \
+	--sites /data/resources/human/somalier/sites.hg38.vcf.gz \
 	--somalier_1K_directory /data/resources/human/somalier/1K_genomes \
 	--somalier_1K_labels /data/resources/human/somalier/ancestry-labels-1kg.tsv \
+	--prefix tso_repeats
 
-Note:
-When running ancestry estimation run on a small number of samples as subprocess run has a maximum argument
-length (no alternative solution???)
 ====================================================================================================================
 """
 
@@ -163,31 +161,37 @@ def somalier_relatedness_expected(file, identifier, prefix):
 		subprocess.run(cmd, shell=True, check=True)
 		logging.info(f"Relatedness analysis completed with groups file: somalier_output/expected_relationships.csv")
 	except subprocess.CalledProcessError as e:
-		logging.error("Error occurred during somalier relate.")
+		logging.error("Error occurred during somalier relate")
 		logging.error(str(e))
 
 
 def somalier_ancestry(path_1K, ancestry_labels, prefix):
 
-	# Get list of .somalier files for 1K genomes
+		# Get list of .somalier files for 1K genomes
 	somalier_1K_files = glob.glob(f"{path_1K}/*.somalier")
 	somalier_1K_files = ' '.join(somalier_1K_files)
 
 	# Get list of .somalier files for samples
 	somalier_files = glob.glob("somalier_output/temp/*.somalier")
 	somalier_files = ' '.join(somalier_files)
-
+	
 	# Construct command
 	cmd = (
 		f"somalier ancestry "
 		f"--labels {ancestry_labels} "
-		f"{path_1K}/*.somalier "
-		f"somalier_output/temp/*.somalier "
+		f"{somalier_1K_files} "
+		f"{somalier_files} "
 		f"--output-prefix somalier_output/{prefix} "
 	)
 
 	# Run the command
-	subprocess.run(cmd, shell=False, check=True)
+	try:
+		subprocess.run(cmd, shell=False, check=True)
+		logging.info(f"Ancestry prediction completed")
+	except subprocess.CalledProcessError as e:
+		logging.error("Error occurred during somalier relate")
+		logging.error(str(e))
+
 
 def main():
 	# Set log format
