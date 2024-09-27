@@ -203,16 +203,8 @@ def somalier_relatedness_expected(file, identifier, prefix):
 
 def somalier_ancestry(path_1K, ancestry_labels, prefix):
 
-	# Get list of .somalier files for 1K genomes
-	somalier_1K_files = glob.glob(f"{path_1K}/*.somalier")
-	somalier_1K_files = " ".join(somalier_1K_files)
-
-	# Get list of .somalier files for samples
-	somalier_files = glob.glob("somalier_output/temp/*.somalier")
-	somalier_files = " ".join(somalier_files)
-
 	# Construct command
-	cmd = f"somalier ancestry --labels {ancestry_labels} {path_1K}/*.somalier somalier_output/temp/*.somalier --output-prefix somalier_output/{prefix} "
+	cmd = f"somalier ancestry --labels {ancestry_labels} {path_1K}/*.somalier ++ somalier_output/temp/*.somalier --output-prefix somalier_output/{prefix} "
 
 	# Run the command
 	try:
