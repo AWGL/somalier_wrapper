@@ -8,6 +8,28 @@ import csv
 import logging
 import pandas as pd
 
+"""
+====================================================================================================================
+Somalier wrapper
+====================================================================================================================
+Description:
+A python wrapper script for estimating relatedness between samples and predicting sample ancestry using somalier
+
+Author:
+Ash Sendell-Price, Sept 2024
+
+Usage:
+python bin/somalier_wrapper.py --sample_info_csv tso_repeated_testing_anonymised.csv \
+	--fasta /data/resources/human/references/GRCh38_masked/GRCh38_full_analysis_set_plus_decoy_hla_masked.fa \
+	--sites ../resources/somalier/sites.hg38.vcf.gz --prefix tso_repeats \
+	--somalier_1K_directory /data/resources/human/somalier/1K_genomes \
+	--somalier_1K_labels /data/resources/human/somalier/ancestry-labels-1kg.tsv \
+
+Note:
+When running ancestry estimation run on a small number of samples as subprocess run has a maximum argument
+length (no alternative solution???)
+====================================================================================================================
+"""
 
 def parse_arguments():
 	argument_parser = argparse.ArgumentParser()
@@ -17,13 +39,14 @@ def parse_arguments():
 	argument_parser.add_argument("--prefix", help="Prefix for results", required=True)
 	argument_parser.add_argument("--patient_identifier", help="Column specifying unique patient identifier (optional)", required=False)
 	argument_parser.add_argument("--somalier_1K_directory", help="Path to directory containing .somalier files for 1K genomes", required=False)
-	args = argument_parser.parse_args("--somalier_1K_labels", help="Path to labels file for 1K genomes samples", required=False)
+	argument_parser.add_argument("--somalier_1K_labels", help="Path to labels file for 1K genomes samples", required=False)
+	args = argument_parser.parse_args()
 	return args
 
 
 def somalier_extract(file, sites, ref):
 	"""
-	Extract informative sites from sample crams
+	Extract informative sites from sample crams/bams
 	"""
 	# Make output directory if it doesn't already exist
 	output_dir = "somalier_output/temp"
@@ -127,7 +150,7 @@ def somalier_relatedness_expected(file, identifier, prefix):
 	# Join list into a single string
 	somalier_files_str = ' '.join(somalier_files)
 
-	# Construct command
+	# Construct command for running somalier relate
 	cmd = (
 		f"somalier relate "
 		f"{somalier_files_str} "
@@ -157,11 +180,14 @@ def somalier_ancestry(path_1K, ancestry_labels, prefix):
 	# Construct command
 	cmd = (
 		f"somalier ancestry "
-		f"--labels {ancestry_labels}"
-		f"{somalier_1K_files}"
-		f"{somalier_files} "
-		f"--output-prefix {prefix}"
+		f"--labels {ancestry_labels} "
+		f"{path_1K}/*.somalier "
+		f"somalier_output/temp/*.somalier "
+		f"--output-prefix somalier_output/{prefix} "
 	)
+
+	# Run the command
+	subprocess.run(cmd, shell=False, check=True)
 
 def main():
 	# Set log format
@@ -182,7 +208,6 @@ def main():
 	# Estimate sample population ancestry
 	if args.somalier_1K_directory and args.somalier_1K_labels:
 		somalier_ancestry(args.somalier_1K_directory, args.somalier_1K_labels, args.prefix)
-
 	
 if __name__ == "__main__":
 	main()
