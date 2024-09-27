@@ -212,20 +212,11 @@ def somalier_ancestry(path_1K, ancestry_labels, prefix):
 	somalier_files = " ".join(somalier_files)
 
 	# Construct command
-	cmd = (
-		f"somalier ancestry "
-		f"--labels {ancestry_labels} "
-		f"{somalier_1K_files} "
-		f"{somalier_files} "
-		f"--output-prefix somalier_output/{prefix} "
-	)
-
-	# Split the command safely into arguments using shlex
-    cmd_args = shlex.split(cmd)
+	cmd = f"somalier ancestry --labels {ancestry_labels} {path_1K}/*.somalier somalier_output/temp/*.somalier --output-prefix somalier_output/{prefix} "
 
 	# Run the command
 	try:
-		subprocess.run(cmd_args, shell=False, check=True)
+		subprocess.run(cmd, shell=True, check=True)
 		logging.info(f"Ancestry prediction completed")
 	except subprocess.CalledProcessError as e:
 		logging.error("Error occurred during somalier relate")
