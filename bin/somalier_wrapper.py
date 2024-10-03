@@ -1,27 +1,5 @@
 #!/usr/bin/env python
 
-"""
-====================================================================================================================
-Somalier wrapper
-====================================================================================================================
-Description:
-A python wrapper script for estimating relatedness between samples and predicting sample ancestry using somalier
-
-Author:
-Ash Sendell-Price, Sept 2024
-
-Usage:
-python bin/somalier_wrapper.py --sample_info_csv tso_repeated_testing_anonymised.csv \
-	--fasta /data/resources/human/references/GRCh38_masked/GRCh38_full_analysis_set_plus_decoy_hla_masked.fa \
-	--sites /data/resources/human/somalier/sites.hg38.vcf.gz \
-	--somalier_1K_directory /data/resources/human/somalier/1K_genomes \
-	--somalier_1K_labels /data/resources/human/somalier/ancestry-labels-1kg.tsv \
-	--prefix tso_repeats
-
-====================================================================================================================
-"""
-
-
 import argparse
 import subprocess
 import os
@@ -30,6 +8,9 @@ import csv
 import logging
 import pandas as pd
 
+############################################################################################################
+# Gather arguments
+############################################################################################################
 
 def parse_arguments():
 	argument_parser = argparse.ArgumentParser()
@@ -62,10 +43,12 @@ def parse_arguments():
 	return args
 
 
+############################################################################################################
+# Extract informative sites from sample crams/bams
+############################################################################################################
+
 def somalier_extract(file, sites, ref):
-	"""
-	Extract informative sites from sample crams/bams
-	"""
+	
 	# Make output directory if it doesn't already exist
 	output_dir = "somalier_output/temp"
 	os.makedirs(output_dir, exist_ok=True)
@@ -106,10 +89,11 @@ def somalier_extract(file, sites, ref):
 				logging.error(str(e))
 
 
+############################################################################################################
+# Run somalier relate without groups file e.g. when sample pairs are not known 
+############################################################################################################
+
 def somalier_relatedness(file, prefix):
-	"""
-	Run somalier relate without groups file e.g. when sample pairs are not known
-	"""
 
 	# Get list of .somalier files in the specified directory
 	# If no files present return error
@@ -141,11 +125,12 @@ def somalier_relatedness(file, prefix):
 		logging.error(str(e))
 
 
+############################################################################################################
+# Run somalier relate with groups file (use when sample relationships are known
+# e.g. multiple samples are from the same patient)
+############################################################################################################
+
 def somalier_relatedness_expected(file, identifier, prefix):
-	"""
-	Run somalier relate with groups file (use when sample relationships are known
-	e.g. multiple samples are from the same patient)
-	"""
 
 	# Load sample IDs and patient identifier from CSV file
 	df = pd.read_csv(file, usecols=["sample_id", identifier])
@@ -153,7 +138,7 @@ def somalier_relatedness_expected(file, identifier, prefix):
 	# Check that the given patient identifier column is present in the sample info csv
 	if identifier not in df.columns:
 		raise ValueError(
-			f"The identifier '{identifier}' is not present in the file '{file}'."
+			f"The identifier '{identifier}' is not present in the csv file '{file}'."
 		)
 
 	# Group by patient identifier and join sample IDs
@@ -201,19 +186,32 @@ def somalier_relatedness_expected(file, identifier, prefix):
 		logging.error(str(e))
 
 
+############################################################################################################
+# Estimate sample ancestries
+############################################################################################################
+
 def somalier_ancestry(path_1K, ancestry_labels, prefix):
 
-	# Construct command
-	cmd = f"somalier ancestry --labels {ancestry_labels} {path_1K}/*.somalier ++ somalier_output/temp/*.somalier --output-prefix somalier_output/{prefix} "
+	# Construct command - uses wildcards rather than lists of files as runs into OSError due to exceeding
+	# max argument length
+	cmd = (
+    f"somalier ancestry --labels {ancestry_labels} "
+    f"{path_1K}/*.somalier ++ somalier_output/temp/*.somalier "
+    f"--output-prefix somalier_output/{prefix} "
+	)
 
 	# Run the command
 	try:
 		subprocess.run(cmd, shell=True, check=True)
 		logging.info(f"Ancestry prediction completed")
 	except subprocess.CalledProcessError as e:
-		logging.error("Error occurred during somalier relate")
+		logging.error("Error occurred during somalier ancestry prediction")
 		logging.error(str(e))
 
+
+############################################################################################################
+# Main function
+############################################################################################################
 
 def main():
 	# Set log format
@@ -221,7 +219,7 @@ def main():
 		level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 	)
 
-	# Gather command line argumentsCalledProcessError
+	# Gather command line arguments
 	args = parse_arguments()
 
 	# Extract informative sites from CRAMs
@@ -240,7 +238,6 @@ def main():
 		somalier_ancestry(
 			args.somalier_1K_directory, args.somalier_1K_labels, args.prefix
 		)
-
 
 if __name__ == "__main__":
 	main()
