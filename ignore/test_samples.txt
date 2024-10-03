@@ -1,2 +1,0 @@
-23M19452	/home/ash/Documents/dragenswgs_post_processing/results/SWGS/23M19452/231103_A01771_0322_AHMHMWDRX3_23M19452.bam
-23M19453	/home/ash/Documents/dragenswgs_post_processing/results/SWGS/23M19453/231103_A01771_0322_AHMHMWDRX3_23M19453.bam
