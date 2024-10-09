@@ -1,7 +1,7 @@
 # somalier_wrapper.py
 
 ## Description
-A python wrapper script for estimating relatedness between samples and predicting sample ancestry using [somalier](https://github.com/brentp/somalier/)
+A python wrapper script for estimating relatedness between samples and predicting sample ancestry using [somalier](https://github.com/brentp/somalier/). 
 
 ## Installation
 This repository can be cloned from GitHub
@@ -32,15 +32,15 @@ python bin/somalier_wrapper.py \
 ```
 
 A description of each flag is provided below:
-| Flag                    | Description                                                                                         | Required or optional? |
-| ----------------------- | --------------------------------------------------------------------------------------------------- | --------------------- |
-| --sample_info_csv	      | A comma seperated file with column headings: sample_id, cram_path                                   | Required              |
-| --fasta                 | Path to the reference sequenced against which the sample reads were aligned                         | Required              |
-| --sites                 | Path to somalier informative sites file                                                             | Required              |
-| --prefix                | Prefix to use when naming output files                                                              | Required              |
-| --patient_identifier    | Patient identifier column name (see notes below)                                                    | Optional              |
-| --somalier_1K_directory | Path to directory containing genome sketches for 1K Genomes Project samples                         | Optional              |
-| --somalier_1K_labels    | Path to ancestry-labels-1kg.tsv specifying known population assignments for 1K Genomes samples      | Optional              |
+| Flag                       | Description                                                                                         | Required or optional? |
+| -------------------------- | --------------------------------------------------------------------------------------------------- | --------------------- |
+| --sample_info_csv	         | A comma seperated file with column headings: sample_id, cram_path                                   | Required              |
+| --fasta                    | Path to the reference sequenced against which the sample reads were aligned                         | Required              |
+| --sites                    | Path to somalier informative sites file                                                             | Required              |
+| --prefix                   | Prefix to use when naming output files                                                              | Required              |
+| --patient_identifier       | Patient identifier column name (see notes below)                                                    | Optional              |
+| --somalier_1K_directory    | Path to directory containing genome sketches for 1K Genomes Project samples                         | Optional              |
+| --somalier_1K_labels       | Path to ancestry-labels-1kg.tsv specifying known population assignments for 1K Genomes samples      | Optional              |
 
 ## Notes:
 ### Running somalier_wrapper.py with known sample relationships
