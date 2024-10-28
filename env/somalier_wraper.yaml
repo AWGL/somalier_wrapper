@@ -1,0 +1,8 @@
+name: somalier_wrapper
+channels:
+- bioconda
+- defaults
+- conda-forge
+dependencies:
+- pandas
+- plotly_express
